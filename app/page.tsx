@@ -20,6 +20,7 @@ export default function Home() {
 
   // 🌟 変更：現在の選択タブに 'settings' を追加
   const [activeTab, setActiveTab] = useState<'chat' | 'schedule' | 'settings'>('chat');
+  const [isDesktopSettingsOpen, setIsDesktopSettingsOpen] = useState(false);
 
   // 🌟 追加：ユーザーの呼び方の設定ステート（初期値は旦那様）
   const [userCallSign, setUserCallSign] = useState('旦那様');
@@ -247,6 +248,15 @@ export default function Home() {
   return (
     // 🌟 変更：全体を囲むコンテナに overflow-hidden を追加して画面全体のスクロールをガード
     <div className="flex flex-col lg:flex-row h-screen bg-gray-100 font-sans relative pb-16 lg:pb-0 overflow-hidden">
+      {/* PC用の設定開閉ボタン */}
+      <button
+        onClick={() => setIsDesktopSettingsOpen((prev) => !prev)}
+        aria-label={isDesktopSettingsOpen ? '設定を閉じる' : '設定を開く'}
+        title={isDesktopSettingsOpen ? '設定を閉じる' : '設定を開く'}
+        className="hidden lg:flex absolute right-4 top-[6px] z-50 h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white/95 text-lg text-gray-700 shadow-sm transition hover:bg-white"
+      >
+        {isDesktopSettingsOpen ? '✕' : '⚙️'}
+      </button>
       
       {/* 削除確認ポップアップ */}
       <DeleteModal 
@@ -255,9 +265,12 @@ export default function Home() {
         onConfirm={executeDelete} 
       />
 
-      {/* 🌟 変更：PCでの3カラムレイアウトのため、横幅の比率を調整（lg:w-2/5 = 40%） */}
+      {/* 🌟 変更：設定表示時は flex 比率を直接 5:3:2 に固定 */}
       {/* チャットエリアのラッパー */}
-      <div className={`w-full lg:w-2/5 h-full ${activeTab === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col border-r border-gray-300`}>
+      <div
+        className={`w-full h-full ${activeTab === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col border-r border-gray-300 transition-all duration-300 ${isDesktopSettingsOpen ? 'lg:min-w-0' : 'lg:w-3/5'}`}
+        style={isDesktopSettingsOpen ? { flex: '5 1 0%' } : undefined}
+      >
         <ChatArea 
           messages={messages}
           input={input}
@@ -273,9 +286,12 @@ export default function Home() {
         />
       </div>
 
-      {/* 🌟 変更：PCでの3カラムレイアウトのため、横幅の比率を調整（lg:w-2/5 = 40%） */}
+      {/* 🌟 変更：設定表示時は予定リストも flex 比率 3 で固定 */}
       {/* 予定リストエリアのラッパー */}
-      <div className={`w-full lg:w-2/5 h-full ${activeTab === 'schedule' ? 'flex' : 'hidden lg:flex'} flex-col bg-gray-50 border-r border-gray-300`}>
+      <div
+        className={`w-full h-full ${activeTab === 'schedule' ? 'flex' : 'hidden lg:flex'} flex-col bg-gray-50 border-r border-gray-300 transition-all duration-300 ${isDesktopSettingsOpen ? 'lg:min-w-0' : 'lg:w-2/5'}`}
+        style={isDesktopSettingsOpen ? { flex: '3 1 0%' } : undefined}
+      >
         <ScheduleList 
           schedules={schedules}
           editingId={editingId}
@@ -292,8 +308,11 @@ export default function Home() {
         />
       </div>
 
-      {/* 🌟 追加：設定エリアのラッパー（lg以上は3カラム目として右端に常時表示、未満は activeTab が 'settings' のときだけ表示、幅は lg:w-1/5 = 20%） */}
-      <div className={`w-full lg:w-1/5 h-full ${activeTab === 'settings' ? 'flex' : 'hidden lg:flex'} flex-col bg-gray-50`}>
+      {/* 🌟 追加：設定表示時は設定エリアを flex 比率 2 で固定 */}
+      <div
+        className={`w-full h-full ${activeTab === 'settings' ? 'flex' : 'hidden'} ${isDesktopSettingsOpen ? 'lg:flex lg:min-w-0' : 'lg:hidden'} flex-col bg-gray-50 border-l border-gray-300 transition-all duration-300`}
+        style={isDesktopSettingsOpen ? { flex: '2 1 0%' } : undefined}
+      >
         <SettingsArea 
           userCallSign={userCallSign} 
           setUserCallSign={setUserCallSign} 

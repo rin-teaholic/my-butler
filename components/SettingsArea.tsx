@@ -10,7 +10,7 @@ export default function SettingsArea({ userCallSign, setUserCallSign }: Settings
 
   return (
     <div className="flex flex-col w-full h-full bg-gray-50 font-sans">
-      <div className="p-4 bg-gray-600 text-white text-center font-butler text-base lg:text-lg tracking-wide">
+      <div className="p-4 bg-gray-600 text-white text-center font-butler">
         設定
       </div>
       
@@ -52,7 +52,7 @@ export default function SettingsArea({ userCallSign, setUserCallSign }: Settings
           <h3 className="text-sm font-bold text-gray-500 tracking-widest uppercase">その他の設定（準備中）</h3>
           <div className="bg-gray-100 p-4 rounded-2xl border border-dashed border-gray-300">
             <p className="text-xs text-gray-400 text-center py-4">
-              執事の性格設定、通知設定、背景の切り替え機能などを準備中でございます。
+              執事の見た目設定、通知設定、背景の切り替え機能などを準備中でございます。
             </p>
           </div>
         </section>
