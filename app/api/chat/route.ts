@@ -1,29 +1,27 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
-// 設定したAPIキーを読み込む
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    // フロントエンド（画面）から送られてきたメッセージを受け取る
     const body = await req.json();
     const { message } = body;
 
-    // モデルを指定
     const model = genAI.getGenerativeModel({
       model: 'gemini-3.5-flash',
-      // AIに「執事」として振る舞い、JSONを作るよう指示
-      systemInstruction: `あなたは有能で礼儀正しい執事です。ユーザーの入力から予定を抽出し、以下のJSON形式で出力してください。
+      // 🌟 執事への指示を「削除の認識」にも対応できるようにアップデート
+      systemInstruction: `あなたは有能で礼儀正しい執事です。ユーザーの入力から予定の登録・削除の意図を抽出し、以下のJSON形式で出力してください。
       {
-        "reply": "執事としての丁寧な返答メッセージ",
-        "title": "予定のタイトル（予定がない・不明な場合はnull）",
-        "date": "日付 YYYY-MM-DD形式（不明な場合はnull）",
-        "time": "時間 HH:MM形式（不明な場合はnull）"
+        "reply": "通常の会話、または予定登録時の丁寧な返答メッセージ。予定削除の指示の場合は、このフィールドは空文字（\"\"）にしてください。",
+        "action": "予定を登録・メモする場合は'create'、予定を削除・キャンセルする場合は'delete'、通常の会話や不明な場合は'none'",
+        "title": "登録する予定のタイトル（actionが'create'の場合のみ。それ以外はnull）",
+        "date": "登録する日付 YYYY-MM-DD形式（actionが'create'の場合のみ。それ以外はnull）",
+        "time": "登録する時間 HH:MM形式（actionが'create'の場合のみ。それ以外はnull）",
+        "targetTitle": "削除・キャンセルしたい予定のタイトル（actionが'delete'の場合のみ。それ以外はnull）"
       }`
     });
 
-    // AIにメッセージを送り、必ずJSON形式で返すように設定
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: message }] }],
       generationConfig: {
@@ -31,7 +29,6 @@ export async function POST(req: Request) {
       }
     });
 
-    // AIの返答（JSON形式の文字列）を受け取り、データに変換して画面側に返す
     const responseText = result.response.text();
     return NextResponse.json(JSON.parse(responseText));
 
