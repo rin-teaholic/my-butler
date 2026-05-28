@@ -7,6 +7,7 @@ import { db } from '../lib/firebase';
 import DeleteModal from '@/components/DeleteModal';
 import ChatArea from '@/components/ChatArea';
 import ScheduleList from '@/components/ScheduleList';
+import SettingsArea from '@/components/SettingsArea'; // 🌟 追加：設定コンポーネント
 
 export type Message = { role: 'user' | 'assistant'; text: string; isDeleteConfirm?: boolean; isUpdateConfirm?: boolean };
 export type Schedule = { id: string; title: string; date: string | null; time: string | null };
@@ -17,8 +18,24 @@ export default function Home() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 現在の選択タブを管理 ('chat' または 'schedule')
-  const [activeTab, setActiveTab] = useState<'chat' | 'schedule'>('chat');
+  // 🌟 変更：現在の選択タブに 'settings' を追加
+  const [activeTab, setActiveTab] = useState<'chat' | 'schedule' | 'settings'>('chat');
+
+  // 🌟 追加：ユーザーの呼び方の設定ステート（初期値は旦那様）
+  const [userCallSign, setUserCallSign] = useState('旦那様');
+
+  // 🌟 追加：ブラウザ（localStorage）に保存された呼び方を読み込む処理
+  useEffect(() => {
+    const savedCallSign = localStorage.getItem('userCallSign');
+    if (savedCallSign) {
+      setUserCallSign(savedCallSign);
+    }
+  }, []);
+
+  // 🌟 追加：呼び方が変更されたら自動的にブラウザに記憶する処理
+  useEffect(() => {
+    localStorage.setItem('userCallSign', userCallSign);
+  }, [userCallSign]);
 
   // 削除確認ポップアップのステート
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -137,7 +154,8 @@ export default function Home() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage }),
+        // 🌟 変更：AIへ呼び方の希望（userCallSign）を一緒に同封して送信します
+        body: JSON.stringify({ message: userMessage, userCallSign }),
       });
 
       if (response.status === 429) {
@@ -227,7 +245,8 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-100 font-sans relative pb-16 lg:pb-0">
+    // 🌟 変更：全体を囲むコンテナに overflow-hidden を追加して画面全体のスクロールをガード
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-100 font-sans relative pb-16 lg:pb-0 overflow-hidden">
       
       {/* 削除確認ポップアップ */}
       <DeleteModal 
@@ -236,8 +255,9 @@ export default function Home() {
         onConfirm={executeDelete} 
       />
 
+      {/* 🌟 変更：PCでの3カラムレイアウトのため、横幅の比率を調整（lg:w-2/5 = 40%） */}
       {/* チャットエリアのラッパー */}
-      <div className={`w-full lg:w-2/3 h-full ${activeTab === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col border-r border-gray-300`}>
+      <div className={`w-full lg:w-2/5 h-full ${activeTab === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col border-r border-gray-300`}>
         <ChatArea 
           messages={messages}
           input={input}
@@ -253,8 +273,9 @@ export default function Home() {
         />
       </div>
 
+      {/* 🌟 変更：PCでの3カラムレイアウトのため、横幅の比率を調整（lg:w-2/5 = 40%） */}
       {/* 予定リストエリアのラッパー */}
-      <div className={`w-full lg:w-1/3 h-full ${activeTab === 'schedule' ? 'flex' : 'hidden lg:flex'} flex-col bg-gray-50`}>
+      <div className={`w-full lg:w-2/5 h-full ${activeTab === 'schedule' ? 'flex' : 'hidden lg:flex'} flex-col bg-gray-50 border-r border-gray-300`}>
         <ScheduleList 
           schedules={schedules}
           editingId={editingId}
@@ -271,7 +292,15 @@ export default function Home() {
         />
       </div>
 
-      {/* 🌟 変更箇所：横並び（flex-row）にして、文字を大きく（text-sm md:text-base）調整 */}
+      {/* 🌟 追加：設定エリアのラッパー（lg以上は3カラム目として右端に常時表示、未満は activeTab が 'settings' のときだけ表示、幅は lg:w-1/5 = 20%） */}
+      <div className={`w-full lg:w-1/5 h-full ${activeTab === 'settings' ? 'flex' : 'hidden lg:flex'} flex-col bg-gray-50`}>
+        <SettingsArea 
+          userCallSign={userCallSign} 
+          setUserCallSign={setUserCallSign} 
+        />
+      </div>
+
+      {/* 下部タブバー（スマホ・タブレット用） */}
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex z-40 lg:hidden shadow-lg backdrop-blur-sm bg-white/95">
         <button 
           onClick={() => setActiveTab('chat')} 
@@ -290,6 +319,16 @@ export default function Home() {
         >
           <span className="text-xl">📅</span>
           <span className="text-sm md:text-base tracking-wide">ご予定リスト</span>
+        </button>
+        {/* 🌟 追加：設定用のタブボタン */}
+        <button 
+          onClick={() => setActiveTab('settings')} 
+          className={`flex-1 flex flex-row items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+            activeTab === 'settings' ? 'text-gray-900 font-bold border-b-2 border-gray-800' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <span className="text-xl">⚙️</span>
+          <span className="text-sm md:text-base tracking-wide">設定</span>
         </button>
       </div>
       

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { FormEvent, useState, useEffect } from 'react'; // 🌟 useState と useEffect を追加
+import { FormEvent, useState, useEffect } from 'react';
 
 type Message = { role: 'user' | 'assistant'; text: string; isDeleteConfirm?: boolean; isUpdateConfirm?: boolean };
 
@@ -32,13 +32,12 @@ export default function ChatArea({
   executeChatUpdate,
   executeChatUpdateCancel,
 }: ChatAreaProps) {
-  // 🌟 追加：画面幅に応じて表示件数を変えるためのステート（初期値はPC用の5件）
+  // 画面幅に応じて表示件数を変えるためのステート
   const [displayCount, setDisplayCount] = useState(5);
 
-  // 🌟 追加：画面の横幅を監視して、表示件数をリアルタイムに切り替える処理
+  // 画面の横幅を監視して、表示件数をリアルタイムに切り替える処理
   useEffect(() => {
     const handleResize = () => {
-      // 親玉ファイル（page.tsx）と合わせて 1024px を境界線にします
       if (window.innerWidth < 1024) {
         setDisplayCount(3); // スマホ・タブレット縦なら3件
       } else {
@@ -46,43 +45,48 @@ export default function ChatArea({
       }
     };
 
-    handleResize(); // 画面が開いた瞬間に一度チェック
-    window.addEventListener('resize', handleResize); // 画面サイズ変更を監視
+    handleResize();
+    window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
     <div className="flex flex-col w-full h-full bg-white"
-      style={{ backgroundImage: 'url(/mansion-bg.jpg)', backgroundSize: 'cover', overflow: 'hidden' }}>
-
-      <div className="p-4 bg-gray-800 text-white font-bold text-center flex items-center justify-center gap-3">
+         style={{ backgroundImage: 'url(/mansion-bg.jpg)', backgroundSize: 'cover', overflow: 'hidden'}}>
+      
+      <div className="p-4 bg-gray-800 text-white text-center flex items-center justify-center gap-3 font-butler">
         わたしの執事
       </div>
-
+      
       <div className="flex-1 p-4 overflow-y-auto z-10 relative bg-slate-50 bg-opacity-20 flex flex-col justify-end">
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <Image src="/butler2.png" alt="執id" fill className="object-contain object-right" />
+          <Image src="/butler2.png" alt="執事" fill className="object-contain object-right" />
         </div>
 
         <div className="space-y-4 relative z-20 pt-[25vh] pr-12 lg:pr-[100px]">
+          
+          {/* 🌟 1. メッセージが空の時の初期メッセージ（font-butlerを適用） */}
           {messages.length === 0 && (
             <div className="flex justify-start">
-              <div className="max-w-[85%] p-3 rounded-lg shadow-md bg-white border border-gray-200 text-gray-800 text-sm lg:text-base rounded-bl-none">
+              <div className="max-w-[85%] p-3 rounded-lg shadow-md bg-white border border-gray-200 text-gray-800 text-sm lg:text-base rounded-bl-none font-butler">
                 ご用件をお申し付けくださいませ。
               </div>
             </div>
           )}
 
-          {/* 🌟 変更：.slice(-5) だった部分を、変化する .slice(-displayCount) に変更 */}
+          {/* 🌟 2. 実際の会話ログのループ（ここで初めて msg を使います） */}
           {messages.slice(-displayCount).map((msg, index, arr) => (
             <div key={index} className="flex flex-col space-y-2">
               <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] p-3 rounded-lg shadow-md text-sm lg:text-base ${msg.role === 'user' ? 'bg-blue-500 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'
-                  }`}>
+                <div className={`max-w-[85%] p-3 rounded-lg shadow-md text-sm lg:text-base ${
+                  msg.role === 'user' 
+                    ? 'bg-blue-500 text-white rounded-br-none' 
+                    : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none font-butler'
+                }`}>
                   {msg.text}
                 </div>
               </div>
-
+              
               {/* 削除確認時のボタン */}
               {msg.isDeleteConfirm && pendingDeleteSchedule && index === arr.length - 1 && (
                 <div className="flex justify-start gap-2 pl-2 animate-fade-in">
@@ -100,7 +104,7 @@ export default function ChatArea({
               )}
             </div>
           ))}
-
+          
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-white border border-gray-200 text-gray-500 p-3 rounded-lg rounded-bl-none shadow-md animate-pulse text-sm lg:text-base">考え中...</div>

@@ -33,7 +33,7 @@ export default function ScheduleList({
 }: ScheduleListProps) {
   return (
     <div className="flex flex-col w-full h-full bg-gray-50">
-      <div className="p-4 bg-gray-700 text-white font-bold text-center">ご予定リスト</div>
+      <div className="p-4 bg-gray-700 text-white text-center font-butler">ご予定リスト</div>
       <div className="flex-1 p-4 overflow-y-auto">
         {schedules.length === 0 ? (
           <p className="text-center text-gray-400 mt-10">登録された予定はありません。</p>
