@@ -52,15 +52,15 @@ export default function ChatArea({
 
   return (
     <div className="flex flex-col w-full h-full bg-white"
-         style={{ backgroundImage: 'url(/mansion-bg.jpg)', backgroundSize: 'cover', overflow: 'hidden'}}>
+         style={{ backgroundImage: 'url(/room-bg.png)', backgroundSize: 'cover', overflow: 'hidden'}}>
       
       <div className="p-4 bg-gray-800 text-white text-center flex items-center justify-center gap-3 font-butler">
         わたしの執事
       </div>
       
-      <div className="flex-1 p-4 overflow-y-auto z-10 relative bg-slate-50 bg-opacity-20 flex flex-col justify-end">
+      <div className="flex-1 p-4 overflow-y-auto z-10 relative bg-opacity-20 flex flex-col justify-end">
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <Image src="/butler2.png" alt="執事" fill className="object-contain object-right" />
+          <Image src="/butler2-transparent.png" alt="執事" fill className="object-contain object-right" />
         </div>
 
         <div className="space-y-4 relative z-20 pt-[25vh] pr-12 lg:pr-[100px]">
