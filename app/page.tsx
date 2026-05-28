@@ -1,29 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+// useEffect を追加して、画面が開いた時にデータを読み込めるようにします
+import { useState, useEffect } from 'react';
+// Firebaseの操作に必要な部品を読み込みます
+import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
-// メッセージと予定のデータ型（TypeScriptのルール）を定義
 type Message = { role: 'user' | 'assistant'; text: string };
 type Schedule = { title: string; date: string | null; time: string | null };
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]); // チャット履歴
-  const [input, setInput] = useState(''); // 入力中のテキスト
-  const [schedules, setSchedules] = useState<Schedule[]>([]); // 予定リスト
-  const [isLoading, setIsLoading] = useState(false); // AIの返答待ち状態
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 🌟 追加：画面が最初に開かれた時に、データベースから予定を読み込む処理
+  useEffect(() => {
+    const loadSchedules = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'schedules'));
+        const loadedData = querySnapshot.docs.map((doc) => ({
+          title: doc.data().title,
+          date: doc.data().date,
+          time: doc.data().time,
+        }));
+        setSchedules(loadedData);
+      } catch (error) {
+        console.error("データの読み込みに失敗しました:", error);
+      }
+    };
+    loadSchedules();
+  }, []);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
     const userMessage = input;
-    // 1. ユーザーの入力をチャット画面に追加
     setMessages((prev) => [...prev, { role: 'user', text: userMessage }]);
     setInput('');
     setIsLoading(true);
 
     try {
-      // 2. 裏側（API）にメッセージを送信
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,16 +50,16 @@ export default function Home() {
       });
 
       const data = await response.json();
-
-      // 3. 執事（AI）の返答をチャット画面に追加
       setMessages((prev) => [...prev, { role: 'assistant', text: data.reply }]);
 
-      // 4. もし予定データが抽出されていれば、リストに追加
       if (data.title) {
-        setSchedules((prev) => [
-          ...prev,
-          { title: data.title, date: data.date, time: data.time },
-        ]);
+        const newSchedule = { title: data.title, date: data.date, time: data.time };
+        
+        // 🌟 追加：新しい予定をデータベース（schedulesという箱）に保存する処理
+        await addDoc(collection(db, 'schedules'), newSchedule);
+
+        // 画面のリストにも追加
+        setSchedules((prev) => [...prev, newSchedule]);
       }
     } catch (error) {
       console.error(error);
@@ -56,7 +75,7 @@ export default function Home() {
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100 font-sans">
       
-      {/* 左側（スマホでは上）：チャットエリア */}
+      {/* 左側：チャットエリア */}
       <div className="flex flex-col w-full md:w-2/3 h-1/2 md:h-full border-r border-gray-300 bg-white">
         <div className="p-4 bg-gray-800 text-white font-bold text-center">
           執事チャット
@@ -85,7 +104,7 @@ export default function Home() {
         </div>
 
         <form onSubmit={sendMessage} className="p-4 bg-white border-t border-gray-200 flex gap-2">
-        <input
+          <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -103,7 +122,7 @@ export default function Home() {
         </form>
       </div>
 
-      {/* 右側（スマホでは下）：予定リストエリア */}
+      {/* 右側：予定リストエリア */}
       <div className="flex flex-col w-full md:w-1/3 h-1/2 md:h-full bg-gray-50">
         <div className="p-4 bg-gray-700 text-white font-bold text-center">
           ご予定リスト
